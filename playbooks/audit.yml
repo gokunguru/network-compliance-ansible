@@ -1,0 +1,15 @@
+---
+- name: Network compliance audit
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Check that the device config file exists
+      ansible.builtin.stat:
+        path: "{{ config_file }}"
+      register: cfg_stat
+
+    - name: Fail if the config file is missing
+      ansible.builtin.assert:
+        that: cfg_stat.stat.exists
+        fail_msg: "Config file not found: {{ config_file }}"
+        success_msg: "Config file found for {{ inventory_hostname }}"

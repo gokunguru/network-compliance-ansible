@@ -1,0 +1,13 @@
+# Secrets
+.vault_pass*
+*.vault
+.env
+# Real lab inventory (never committed)
+inventories/lab/
+# Misc
+*.retry
+.venv/
+venv/
+__pycache__/
+reports/*.html
+.DS_Store

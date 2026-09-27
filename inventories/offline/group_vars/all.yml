@@ -1,0 +1,3 @@
+---
+ansible_connection: local
+config_file: "{{ playbook_dir }}/../samples/configs/{{ inventory_hostname }}.cfg"
