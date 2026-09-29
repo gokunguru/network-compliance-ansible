@@ -1,15 +1,13 @@
----
 - name: Network compliance audit
   hosts: all
   gather_facts: false
   tasks:
-    - name: Check that the device config file exists
-      ansible.builtin.stat:
-        path: "{{ config_file }}"
-      register: cfg_stat
+    - name: Load device config
+      ansible.builtin.set_fact:
+        device_config: "{{ lookup('ansible.builtin.file', config_file) }}"
 
-    - name: Fail if the config file is missing
+    - name: "CHECK-001 | Telnet must be disabled on VTY lines"
       ansible.builtin.assert:
-        that: cfg_stat.stat.exists
-        fail_msg: "Config file not found: {{ config_file }}"
-        success_msg: "Config file found for {{ inventory_hostname }}"
+        that: device_config is not search('transport input (all|.*telnet)')
+        fail_msg: "FAIL - Telnet is allowed on VTY lines"
+        success_msg: "PASS - Only SSH is allowed on VTY lines"
