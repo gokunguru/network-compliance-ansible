@@ -1,13 +1,53 @@
+---
 - name: Network compliance audit
   hosts: all
   gather_facts: false
+  vars:
+    compliance_checks:
+      - id: CHECK-001
+        title: Telnet must be disabled on VTY lines
+        pattern: 'transport input (all|.*telnet)'
+        expect: absent
+      - id: CHECK-002
+        title: SSH version 2 must be enabled
+        pattern: '(?m)^ip ssh version 2$'
+        expect: present
+      - id: CHECK-003
+        title: Password encryption service must be enabled
+        pattern: '(?m)^service password-encryption$'
+        expect: present
+      - id: CHECK-004
+        title: Enable secret must be used instead of enable password
+        pattern: '(?m)^enable password'
+        expect: absent
+ 
   tasks:
     - name: Load device config
       ansible.builtin.set_fact:
         device_config: "{{ lookup('ansible.builtin.file', config_file) }}"
-
-    - name: "CHECK-001 | Telnet must be disabled on VTY lines"
+ 
+    - name: Evaluate compliance checks
+      ansible.builtin.set_fact:
+        audit_results: "{{ audit_results | default([]) + [check_result] }}"
+      vars:
+        check_matched: "{{ device_config is search(item.pattern) }}"
+        check_result:
+          id: "{{ item.id }}"
+          title: "{{ item.title }}"
+          status: "{{ 'PASS' if (check_matched | bool) == (item.expect == 'present') else 'FAIL' }}"
+      loop: "{{ compliance_checks }}"
+      loop_control:
+        label: "{{ item.id }}"
+ 
+    - name: Show audit summary
+      ansible.builtin.debug:
+        msg: "{{ item.status }} | {{ item.id }} | {{ item.title }}"
+      loop: "{{ audit_results }}"
+      loop_control:
+        label: "{{ item.id }}"
+ 
+    - name: Fail if any check failed
       ansible.builtin.assert:
-        that: device_config is not search('transport input (all|.*telnet)')
-        fail_msg: "FAIL - Telnet is allowed on VTY lines"
-        success_msg: "PASS - Only SSH is allowed on VTY lines"
+        that: audit_results | selectattr('status', 'equalto', 'FAIL') | list | length == 0
+        fail_msg: "{{ audit_results | selectattr('status', 'equalto', 'FAIL') | list | length }} check(s) failed"
+        success_msg: "All checks passed"
