@@ -1,0 +1,21 @@
+---
+# Compliance rules for Cisco IOS / IOS XE devices
+# expect: present -> the pattern MUST be found in the config
+# expect: absent  -> the pattern MUST NOT be found in the config
+compliance_checks:
+  - id: CHECK-001
+    title: Telnet must be disabled on VTY lines
+    pattern: 'transport input (all|.*telnet)'
+    expect: absent
+  - id: CHECK-002
+    title: SSH version 2 must be enabled
+    pattern: '(?m)^ip ssh version 2$'
+    expect: present
+  - id: CHECK-003
+    title: Password encryption service must be enabled
+    pattern: '(?m)^service password-encryption$'
+    expect: present
+  - id: CHECK-004
+    title: Enable secret must be used instead of enable password
+    pattern: '(?m)^enable password'
+    expect: absent
