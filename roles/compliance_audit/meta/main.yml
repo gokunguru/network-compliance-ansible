@@ -1,0 +1,13 @@
+---
+galaxy_info:
+  role_name: compliance_audit
+  namespace: gokunguru
+  author: Kamil Mandi
+  description: Audit network device configurations against compliance rules
+  license: MIT
+  min_ansible_version: "2.16"
+  platforms:
+    - name: GenericLinux
+      versions:
+        - all
+dependencies: []

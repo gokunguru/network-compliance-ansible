@@ -1,0 +1,7 @@
+---
+# List of compliance checks to evaluate (id, title, pattern, expect)
+compliance_audit_checks: []
+# Path to the device configuration file to audit
+compliance_audit_config_file: ""
+# Fail the host at the end if at least one check failed
+compliance_audit_fail_on_noncompliance: true

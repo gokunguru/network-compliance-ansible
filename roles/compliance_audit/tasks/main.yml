@@ -1,0 +1,30 @@
+---
+- name: Load device config
+  ansible.builtin.set_fact:
+    compliance_audit_config: "{{ lookup('ansible.builtin.file', compliance_audit_config_file) }}"
+
+- name: Evaluate compliance checks
+  ansible.builtin.set_fact:
+    compliance_audit_results: "{{ compliance_audit_results | default([]) + [compliance_audit_result] }}"
+  vars:
+    compliance_audit_result:
+      id: "{{ item.id }}"
+      title: "{{ item.title }}"
+      status: "{{ 'PASS' if (compliance_audit_config is search(item.pattern)) == (item.expect == 'present') else 'FAIL' }}"
+  loop: "{{ compliance_audit_checks }}"
+  loop_control:
+    label: "{{ item.id }}"
+
+- name: Show audit summary
+  ansible.builtin.debug:
+    msg: "{{ item.status }} | {{ item.id }} | {{ item.title }}"
+  loop: "{{ compliance_audit_results }}"
+  loop_control:
+    label: "{{ item.id }}"
+
+- name: Fail if any check failed
+  ansible.builtin.assert:
+    that: compliance_audit_results | selectattr('status', 'equalto', 'FAIL') | list | length == 0
+    fail_msg: "{{ compliance_audit_results | selectattr('status', 'equalto', 'FAIL') | list | length }} check(s) failed"
+    success_msg: "All checks passed"
+  when: compliance_audit_fail_on_noncompliance | bool

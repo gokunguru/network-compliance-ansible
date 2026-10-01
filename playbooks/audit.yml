@@ -4,33 +4,8 @@
   gather_facts: false
   vars_files:
     - ../rules/cisco_ios.yml
-
-  tasks:
-    - name: Load device config
-      ansible.builtin.set_fact:
-        device_config: "{{ lookup('ansible.builtin.file', config_file) }}"
-
-    - name: Evaluate compliance checks
-      ansible.builtin.set_fact:
-        audit_results: "{{ audit_results | default([]) + [check_result] }}"
+  roles:
+    - role: compliance_audit
       vars:
-        check_result:
-          id: "{{ item.id }}"
-          title: "{{ item.title }}"
-          status: "{{ 'PASS' if (device_config is search(item.pattern)) == (item.expect == 'present') else 'FAIL' }}"
-      loop: "{{ compliance_checks }}"
-      loop_control:
-        label: "{{ item.id }}"
-
-    - name: Show audit summary
-      ansible.builtin.debug:
-        msg: "{{ item.status }} | {{ item.id }} | {{ item.title }}"
-      loop: "{{ audit_results }}"
-      loop_control:
-        label: "{{ item.id }}"
-
-    - name: Fail if any check failed
-      ansible.builtin.assert:
-        that: audit_results | selectattr('status', 'equalto', 'FAIL') | list | length == 0
-        fail_msg: "{{ audit_results | selectattr('status', 'equalto', 'FAIL') | list | length }} check(s) failed"
-        success_msg: "All checks passed"
+        compliance_audit_checks: "{{ compliance_checks }}"
+        compliance_audit_config_file: "{{ config_file }}"
