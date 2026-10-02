@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Network Compliance Report</title>
+<style>
+  :root { --bg:#f6f7f9; --card:#fff; --text:#1f2328; --muted:#656d76; --pass:#1a7f37; --fail:#cf222e; --border:#d0d7de; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: -apple-system, "Segoe UI", Roboto, sans-serif; background:var(--bg); color:var(--text); }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 32px 16px; }
+  h1 { margin: 0 0 4px; font-size: 24px; }
+  .meta { color: var(--muted); font-size: 14px; margin-bottom: 24px; }
+  .summary { display:flex; gap:12px; flex-wrap:wrap; margin-bottom: 24px; }
+  .stat { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:12px 16px; min-width:140px; }
+  .stat b { display:block; font-size:22px; }
+  .stat span { color:var(--muted); font-size:13px; }
+  .device { background:var(--card); border:1px solid var(--border); border-radius:8px; margin-bottom:16px; overflow:hidden; }
+  .device header { display:flex; justify-content:space-between; align-items:center; padding:12px 16px; border-bottom:1px solid var(--border); }
+  .device h2 { margin:0; font-size:18px; }
+  .score { font-weight:600; }
+  .bar { height:6px; background:#eaeef2; }
+  .bar div { height:100%; }
+  .table-wrap { overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th, td { text-align:left; padding:10px 16px; border-bottom:1px solid var(--border); }
+  th { color:var(--muted); font-weight:600; }
+  tr:last-child td { border-bottom:none; }
+  .badge { display:inline-block; padding:2px 10px; border-radius:12px; font-size:12px; font-weight:700; color:#fff; }
+  .PASS { background:var(--pass); } .FAIL { background:var(--fail); }
+  code { font-size:13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+{% set ns = namespace(total=0, failed=0, compliant_devices=0) %}
+{% for host in ansible_play_hosts %}
+{%   set results = hostvars[host].compliance_audit_results | default([]) %}
+{%   set fails = results | selectattr('status', 'equalto', 'FAIL') | list | length %}
+{%   set ns.total = ns.total + results | length %}
+{%   set ns.failed = ns.failed + fails %}
+{%   if fails == 0 %}{% set ns.compliant_devices = ns.compliant_devices + 1 %}{% endif %}
+{% endfor %}
+<h1>Network Compliance Report</h1>
+<div class="meta">Generated {{ now(utc=true).strftime('%Y-%m-%d %H:%M UTC') }} &middot; {{ ansible_play_hosts | length }} device(s) audited</div>
+
+<div class="summary">
+  <div class="stat"><b>{{ ns.compliant_devices }}/{{ ansible_play_hosts | length }}</b><span>Compliant devices</span></div>
+  <div class="stat"><b>{{ ns.total - ns.failed }}/{{ ns.total }}</b><span>Checks passed</span></div>
+  <div class="stat"><b>{{ ((ns.total - ns.failed) * 100 / ns.total) | round | int if ns.total else 0 }}%</b><span>Overall score</span></div>
+</div>
+
+{% for host in ansible_play_hosts | sort %}
+{%   set results = hostvars[host].compliance_audit_results | default([]) %}
+{%   set passed = results | selectattr('status', 'equalto', 'PASS') | list | length %}
+{%   set pct = (passed * 100 / results | length) | round | int if results else 0 %}
+<section class="device">
+  <header>
+    <h2>{{ host }}</h2>
+    <span class="score" style="color: {{ 'var(--pass)' if pct == 100 else 'var(--fail)' }}">{{ passed }}/{{ results | length }} &middot; {{ pct }}%</span>
+  </header>
+  <div class="bar"><div style="width: {{ pct }}%; background: {{ 'var(--pass)' if pct == 100 else 'var(--fail)' }}"></div></div>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Status</th><th>ID</th><th>Check</th></tr></thead>
+    <tbody>
+{%   for r in results %}
+      <tr><td><span class="badge {{ r.status }}">{{ r.status }}</span></td><td><code>{{ r.id }}</code></td><td>{{ r.title }}</td></tr>
+{%   endfor %}
+    </tbody>
+  </table>
+  </div>
+</section>
+{% endfor %}
+</div>
+</body>
+</html>

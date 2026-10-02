@@ -5,3 +5,6 @@ compliance_audit_checks: []
 compliance_audit_config_file: ""
 # Fail the host at the end if at least one check failed
 compliance_audit_fail_on_noncompliance: true
+# Generate a consolidated HTML report for all audited devices
+compliance_audit_report_enabled: true
+compliance_audit_report_path: "{{ playbook_dir }}/../reports/compliance-report.html"
