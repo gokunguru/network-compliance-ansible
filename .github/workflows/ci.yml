@@ -22,6 +22,27 @@ jobs:
       - name: Syntax check
         run: ansible-playbook playbooks/audit.yml --syntax-check
 
+  audit:
+    runs-on: ubuntu-24.04
+    needs: lint
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          ansible-galaxy collection install -r requirements.yml
+      - name: Run offline compliance audit
+        run: ansible-playbook playbooks/audit.yml -e compliance_audit_fail_on_noncompliance=false
+      - name: Upload compliance report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: compliance-report
+          path: reports/compliance-report.html
+
   secrets:
     runs-on: ubuntu-24.04
     steps:
