@@ -22,7 +22,9 @@
   .bar { height:6px; background:#eaeef2; }
   .bar div { height:100%; }
   .table-wrap { overflow-x:auto; }
-  table { width:100%; border-collapse:collapse; font-size:14px; }
+  table { width:100%; border-collapse:collapse; font-size:14px; table-layout:fixed; }
+  th:nth-child(1) { width:90px; }
+  th:nth-child(2) { width:120px; }
   th, td { text-align:left; padding:10px 16px; border-bottom:1px solid var(--border); }
   th { color:var(--muted); font-weight:600; }
   tr:last-child td { border-bottom:none; }
