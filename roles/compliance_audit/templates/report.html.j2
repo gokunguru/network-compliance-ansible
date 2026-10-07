@@ -24,12 +24,15 @@
   .table-wrap { overflow-x:auto; }
   table { width:100%; border-collapse:collapse; font-size:14px; table-layout:fixed; }
   th:nth-child(1) { width:90px; }
-  th:nth-child(2) { width:120px; }
+  th:nth-child(2) { width:100px; }
+  th:nth-child(3) { width:120px; }
   th, td { text-align:left; padding:10px 16px; border-bottom:1px solid var(--border); }
   th { color:var(--muted); font-weight:600; }
   tr:last-child td { border-bottom:none; }
   .badge { display:inline-block; padding:2px 10px; border-radius:12px; font-size:12px; font-weight:700; color:#fff; }
   .PASS { background:var(--pass); } .FAIL { background:var(--fail); }
+  .sev { font-size:12px; font-weight:700; text-transform:uppercase; }
+  .sev-high { color:#cf222e; } .sev-medium { color:#9a6700; } .sev-low { color:#656d76; }
   code { font-size:13px; }
 </style>
 </head>
@@ -64,10 +67,10 @@
   <div class="bar"><div style="width: {{ pct }}%; background: {{ 'var(--pass)' if pct == 100 else 'var(--fail)' }}"></div></div>
   <div class="table-wrap">
   <table>
-    <thead><tr><th>Status</th><th>ID</th><th>Check</th></tr></thead>
+    <thead><tr><th>Status</th><th>Severity</th><th>ID</th><th>Check</th></tr></thead>
     <tbody>
 {%   for r in results %}
-      <tr><td><span class="badge {{ r.status }}">{{ r.status }}</span></td><td><code>{{ r.id }}</code></td><td>{{ r.title }}</td></tr>
+      <tr><td><span class="badge {{ r.status }}">{{ r.status }}</span></td><td><span class="sev sev-{{ r.severity }}">{{ r.severity }}</span></td><td><code>{{ r.id }}</code></td><td>{{ r.title }}</td></tr>
 {%   endfor %}
     </tbody>
   </table>

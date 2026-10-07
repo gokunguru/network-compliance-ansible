@@ -10,6 +10,7 @@
     compliance_audit_result:
       id: "{{ item.id }}"
       title: "{{ item.title }}"
+      severity: "{{ item.severity | default('medium') }}"
       status: "{{ 'PASS' if (compliance_audit_config is search(item.pattern)) == (item.expect == 'present') else 'FAIL' }}"
   loop: "{{ compliance_audit_checks }}"
   loop_control:
@@ -17,7 +18,7 @@
 
 - name: Show audit summary
   ansible.builtin.debug:
-    msg: "{{ item.status }} | {{ item.id }} | {{ item.title }}"
+    msg: "{{ item.status }} | {{ item.severity | upper }} | {{ item.id }} | {{ item.title }}"
   loop: "{{ compliance_audit_results }}"
   loop_control:
     label: "{{ item.id }}"
