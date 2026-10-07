@@ -41,6 +41,10 @@ A rule looks like this:
 | CHECK-002 | SSH version 2 must be enabled |
 | CHECK-003 | Password encryption service must be enabled |
 | CHECK-004 | Enable secret must be used instead of enable password |
+| CHECK-005 | Remote syslog server must be configured |
+| CHECK-006 | Login banner must be configured |
+| CHECK-007 | VTY lines must have an idle timeout |
+| CHECK-008 | VTY access must be restricted with an access-class |
 
 ## Quick start
 
