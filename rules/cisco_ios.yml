@@ -24,3 +24,23 @@ compliance_checks:
     severity: high
     pattern: '(?m)^enable password'
     expect: absent
+  - id: CHECK-005
+    title: Remote syslog server must be configured
+    severity: medium
+    pattern: '(?m)^logging host \S+'
+    expect: present
+  - id: CHECK-006
+    title: Login banner must be configured
+    severity: low
+    pattern: '(?m)^banner (login|motd) '
+    expect: present
+  - id: CHECK-007
+    title: VTY lines must have an idle timeout
+    severity: medium
+    pattern: '(?m)^line vty[^\n]*\n(?: [^\n]*\n)*? exec-timeout (?!0 0)'
+    expect: present
+  - id: CHECK-008
+    title: VTY access must be restricted with an access-class
+    severity: high
+    pattern: '(?m)^line vty[^\n]*\n(?: [^\n]*\n)*? access-class \S+ in'
+    expect: present
