@@ -36,6 +36,8 @@ jobs:
         run: |
           pip install -r requirements.txt
           ansible-galaxy collection install -r requirements.yml
+      - name: Test compliance rules
+        run: ansible-playbook tests/test_rules.yml
       - name: Run offline compliance audit
         run: ansible-playbook playbooks/audit.yml -e compliance_audit_fail_on_noncompliance=false
       - name: Upload compliance report
