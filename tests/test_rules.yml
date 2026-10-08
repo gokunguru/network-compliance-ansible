@@ -1,0 +1,37 @@
+---
+- name: Test compliance rules against known-good and known-bad snippets
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files:
+    - ../rules/cisco_ios.yml
+    - rule_cases.yml
+
+  tasks:
+    - name: Every rule must have at least one PASS and one FAIL case
+      ansible.builtin.assert:
+        that:
+          - rule_test_cases | selectattr('rule', 'equalto', item.id) | selectattr('expect', 'equalto', 'PASS') | list | length > 0
+          - rule_test_cases | selectattr('rule', 'equalto', item.id) | selectattr('expect', 'equalto', 'FAIL') | list | length > 0
+        fail_msg: "{{ item.id }} is missing a PASS or FAIL test case"
+        quiet: true
+      loop: "{{ compliance_checks }}"
+      loop_control:
+        label: "{{ item.id }}"
+
+    - name: Evaluate each test case
+      ansible.builtin.set_fact:
+        rule_test_failures: "{{ rule_test_failures | default([]) + ([test_error] if test_status != item.expect else []) }}"
+      vars:
+        test_error: "{{ item.rule }} ({{ item.desc }}): expected {{ item.expect }}, got {{ test_status }}"
+        test_rule: "{{ compliance_checks | selectattr('id', 'equalto', item.rule) | first }}"
+        test_status: "{{ 'PASS' if (item.config is search(test_rule.pattern)) == (test_rule.expect == 'present') else 'FAIL' }}"
+      loop: "{{ rule_test_cases }}"
+      loop_control:
+        label: "{{ item.rule }} - {{ item.desc }}"
+
+    - name: All test cases must match their expected status
+      ansible.builtin.assert:
+        that: rule_test_failures | default([]) | length == 0
+        fail_msg: "{{ rule_test_failures }}"
+        success_msg: "{{ rule_test_cases | length }} test cases passed"

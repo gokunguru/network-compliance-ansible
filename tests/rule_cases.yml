@@ -1,0 +1,33 @@
+---
+# Regression tests for compliance rules.
+# Each case feeds a small config snippet to one rule and states the expected status.
+rule_test_cases:
+  # CHECK-001 - telnet on VTY
+  - {rule: CHECK-001, expect: PASS, desc: "SSH only", config: "line vty 0 4\n transport input ssh\n"}
+  - {rule: CHECK-001, expect: FAIL, desc: "telnet + ssh", config: "line vty 0 4\n transport input telnet ssh\n"}
+  - {rule: CHECK-001, expect: FAIL, desc: "transport input all", config: "line vty 0 4\n transport input all\n"}
+  # CHECK-002 - SSH version 2
+  - {rule: CHECK-002, expect: PASS, desc: "ssh v2 set", config: "ip ssh version 2\n"}
+  - {rule: CHECK-002, expect: FAIL, desc: "no ssh version line", config: "hostname R1\n"}
+  # CHECK-003 - password encryption
+  - {rule: CHECK-003, expect: PASS, desc: "service enabled", config: "service password-encryption\n"}
+  - {rule: CHECK-003, expect: FAIL, desc: "service disabled", config: "no service password-encryption\n"}
+  # CHECK-004 - enable password
+  - {rule: CHECK-004, expect: PASS, desc: "enable secret", config: "enable secret 9 $9$abc\n"}
+  - {rule: CHECK-004, expect: FAIL, desc: "enable password", config: "enable password cisco\n"}
+  # CHECK-005 - remote syslog
+  - {rule: CHECK-005, expect: PASS, desc: "logging host", config: "logging host 10.0.0.1\n"}
+  - {rule: CHECK-005, expect: FAIL, desc: "local buffer only", config: "logging buffered 16384\n"}
+  # CHECK-006 - login banner
+  - {rule: CHECK-006, expect: PASS, desc: "banner login", config: "banner login ^CAuthorized only^C\n"}
+  - {rule: CHECK-006, expect: PASS, desc: "banner motd", config: "banner motd ^CAuthorized only^C\n"}
+  - {rule: CHECK-006, expect: FAIL, desc: "exec banner only", config: "banner exec ^CHello^C\n"}
+  # CHECK-007 - VTY idle timeout
+  - {rule: CHECK-007, expect: PASS, desc: "timeout 10 min", config: "line vty 0 4\n exec-timeout 10 0\n"}
+  - {rule: CHECK-007, expect: PASS, desc: "timeout 30 s", config: "line vty 0 4\n exec-timeout 0 30\n"}
+  - {rule: CHECK-007, expect: FAIL, desc: "timeout disabled", config: "line vty 0 4\n exec-timeout 0 0\n"}
+  - {rule: CHECK-007, expect: FAIL, desc: "timeout on console only", config: "line con 0\n exec-timeout 5 0\nline vty 0 4\n login local\n"}
+  # CHECK-008 - VTY access-class
+  - {rule: CHECK-008, expect: PASS, desc: "access-class in", config: "line vty 0 4\n access-class MGMT in\n"}
+  - {rule: CHECK-008, expect: FAIL, desc: "no access-class", config: "line vty 0 4\n login local\n"}
+  - {rule: CHECK-008, expect: FAIL, desc: "access-class out only", config: "line vty 0 4\n access-class MGMT out\n"}
