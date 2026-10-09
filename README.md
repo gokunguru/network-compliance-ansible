@@ -13,6 +13,7 @@ Network compliance audit framework built with Ansible. It checks network device 
 - **Data-driven rules**: compliance checks are defined in YAML, not hard-coded in tasks. Adding a check means adding four lines of YAML.
 - **Full audit, then verdict**: every check runs on every device; the play only fails at the end if a device is non-compliant.
 - **Consolidated HTML report**: one report for all devices, with per-device scores and check details.
+- **Weighted scoring**: each rule has a severity (high / medium / low); the compliance score weights findings accordingly, so a single critical gap costs more than several minor ones.
 - **Offline mode**: audits configuration files without any live device, which makes the whole project testable in CI.
 - **Quality gates**: `ansible-lint` (production profile) and `gitleaks` secret scanning on every push.
 
@@ -65,6 +66,7 @@ The sample configs are intentionally imperfect: `R1` is non-compliant and `SW1` 
 | `compliance_audit_checks` | `[]` | List of checks to evaluate |
 | `compliance_audit_config_file` | `""` | Path to the device configuration to audit |
 | `compliance_audit_fail_on_noncompliance` | `true` | Fail the host if at least one check fails |
+| `compliance_audit_severity_weights` | `{high: 3, medium: 2, low: 1}` | Weight of each severity in the compliance score |
 | `compliance_audit_report_enabled` | `true` | Generate the HTML report |
 | `compliance_audit_report_path` | `reports/compliance-report.html` | Report output path |
 
