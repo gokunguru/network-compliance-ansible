@@ -38,12 +38,15 @@
 </head>
 <body>
 <div class="wrap">
-{% set ns = namespace(total=0, failed=0, compliant_devices=0) %}
+{% set ns = namespace(total=0, failed=0, compliant_devices=0, weight=0, weight_passed=0, high_fails=0) %}
 {% for host in ansible_play_hosts %}
 {%   set results = hostvars[host].compliance_audit_results | default([]) %}
 {%   set fails = results | selectattr('status', 'equalto', 'FAIL') | list | length %}
 {%   set ns.total = ns.total + results | length %}
 {%   set ns.failed = ns.failed + fails %}
+{%   set ns.weight = ns.weight + results | map(attribute='weight') | map('int') | sum %}
+{%   set ns.weight_passed = ns.weight_passed + results | selectattr('status', 'equalto', 'PASS') | map(attribute='weight') | map('int') | sum %}
+{%   set ns.high_fails = ns.high_fails + results | selectattr('status', 'equalto', 'FAIL') | selectattr('severity', 'equalto', 'high') | list | length %}
 {%   if fails == 0 %}{% set ns.compliant_devices = ns.compliant_devices + 1 %}{% endif %}
 {% endfor %}
 <h1>Network Compliance Report</h1>
@@ -52,17 +55,18 @@
 <div class="summary">
   <div class="stat"><b>{{ ns.compliant_devices }}/{{ ansible_play_hosts | length }}</b><span>Compliant devices</span></div>
   <div class="stat"><b>{{ ns.total - ns.failed }}/{{ ns.total }}</b><span>Checks passed</span></div>
-  <div class="stat"><b>{{ ((ns.total - ns.failed) * 100 / ns.total) | round | int if ns.total else 0 }}%</b><span>Overall score</span></div>
+  <div class="stat"><b>{{ (ns.weight_passed * 100 / ns.weight) | round | int if ns.weight else 100 }}%</b><span>Weighted score</span></div>
+  <div class="stat"><b style="color: {{ 'var(--fail)' if ns.high_fails else 'var(--pass)' }}">{{ ns.high_fails }}</b><span>High-severity findings</span></div>
 </div>
 
 {% for host in ansible_play_hosts | sort %}
 {%   set results = hostvars[host].compliance_audit_results | default([]) %}
 {%   set passed = results | selectattr('status', 'equalto', 'PASS') | list | length %}
-{%   set pct = (passed * 100 / results | length) | round | int if results else 0 %}
+{%   set pct = hostvars[host].compliance_audit_score | default(0) | int %}
 <section class="device">
   <header>
     <h2>{{ host }}</h2>
-    <span class="score" style="color: {{ 'var(--pass)' if pct == 100 else 'var(--fail)' }}">{{ passed }}/{{ results | length }} &middot; {{ pct }}%</span>
+    <span class="score" style="color: {{ 'var(--pass)' if pct == 100 else 'var(--fail)' }}">{{ passed }}/{{ results | length }} checks &middot; {{ pct }}% weighted</span>
   </header>
   <div class="bar"><div style="width: {{ pct }}%; background: {{ 'var(--pass)' if pct == 100 else 'var(--fail)' }}"></div></div>
   <div class="table-wrap">

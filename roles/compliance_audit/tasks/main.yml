@@ -11,10 +11,18 @@
       id: "{{ item.id }}"
       title: "{{ item.title }}"
       severity: "{{ item.severity | default('medium') }}"
+      weight: "{{ compliance_audit_severity_weights[item.severity | default('medium')] }}"
       status: "{{ 'PASS' if (compliance_audit_config is search(item.pattern)) == (item.expect == 'present') else 'FAIL' }}"
   loop: "{{ compliance_audit_checks }}"
   loop_control:
     label: "{{ item.id }}"
+
+- name: Compute weighted compliance score
+  ansible.builtin.set_fact:
+    compliance_audit_score: "{{ ((passed_weight | int) * 100 / (total_weight | int)) | round | int if (total_weight | int) > 0 else 100 }}"
+  vars:
+    total_weight: "{{ compliance_audit_results | map(attribute='weight') | map('int') | sum }}"
+    passed_weight: "{{ compliance_audit_results | selectattr('status', 'equalto', 'PASS') | map(attribute='weight') | map('int') | sum }}"
 
 - name: Show audit summary
   ansible.builtin.debug:
@@ -22,6 +30,10 @@
   loop: "{{ compliance_audit_results }}"
   loop_control:
     label: "{{ item.id }}"
+
+- name: Show weighted compliance score
+  ansible.builtin.debug:
+    msg: "Weighted compliance score: {{ compliance_audit_score }}%"
 
 - name: Generate HTML compliance report
   ansible.builtin.template:
