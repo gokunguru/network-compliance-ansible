@@ -10,4 +10,5 @@ inventories/lab/
 venv/
 __pycache__/
 reports/*.html
+reports/*.json
 .DS_Store

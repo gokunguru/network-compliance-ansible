@@ -40,12 +40,26 @@ jobs:
         run: ansible-playbook tests/test_rules.yml
       - name: Run offline compliance audit
         run: ansible-playbook playbooks/audit.yml -e compliance_audit_fail_on_noncompliance=false
+      - name: Publish audit summary
+        if: always()
+        run: |
+          {
+            echo "## Compliance audit"
+            echo
+            jq -r '.summary | "**\(.compliant_devices)/\(.devices)** compliant devices · **\(.checks_failed)/\(.checks)** failed checks · **\(.high_severity_findings)** high-severity findings"' reports/compliance-report.json
+            echo
+            echo "| Device | Score | Failed checks |"
+            echo "|---|---|---|"
+            jq -r '.devices[] | "| \(.name) | \(.score)% | \([.results[] | select(.status == "FAIL") | .id] | join(", ")) |"' reports/compliance-report.json
+          } >> "$GITHUB_STEP_SUMMARY"
       - name: Upload compliance report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: compliance-report
-          path: reports/compliance-report.html
+          path: |
+            reports/compliance-report.html
+            reports/compliance-report.json
 
   secrets:
     runs-on: ubuntu-24.04
