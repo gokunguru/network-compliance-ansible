@@ -13,3 +13,6 @@ compliance_audit_severity_weights:
 # Generate a consolidated HTML report for all audited devices
 compliance_audit_report_enabled: true
 compliance_audit_report_path: "{{ playbook_dir }}/../reports/compliance-report.html"
+# Generate a machine-readable JSON report (for SIEM, GRC tooling or CI gating)
+compliance_audit_json_report_enabled: true
+compliance_audit_json_report_path: "{{ playbook_dir }}/../reports/compliance-report.json"

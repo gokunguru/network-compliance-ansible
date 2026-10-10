@@ -1,0 +1,24 @@
+{#- Machine-readable compliance report: same data as the HTML report. -#}
+{%- set ns = namespace(devices=[]) -%}
+{%- for host in ansible_play_hosts | sort -%}
+{%-   set results = hostvars[host].compliance_audit_results | default([]) -%}
+{%-   set ns.devices = ns.devices + [{
+        'name': host,
+        'compliant': results | selectattr('status', 'equalto', 'FAIL') | list | length == 0,
+        'score': hostvars[host].compliance_audit_score | default(0) | int,
+        'results': results
+      }] -%}
+{%- endfor -%}
+{%- set all_results = ns.devices | map(attribute='results') | flatten -%}
+{%- set failed = all_results | selectattr('status', 'equalto', 'FAIL') | list -%}
+{{ {
+  'generated_at': now(utc=true).strftime('%Y-%m-%dT%H:%M:%SZ'),
+  'summary': {
+    'devices': ns.devices | length,
+    'compliant_devices': ns.devices | selectattr('compliant') | list | length,
+    'checks': all_results | length,
+    'checks_failed': failed | length,
+    'high_severity_findings': failed | selectattr('severity', 'equalto', 'high') | list | length
+  },
+  'devices': ns.devices
+} | to_nice_json(indent=2) }}

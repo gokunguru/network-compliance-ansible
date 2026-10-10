@@ -60,6 +60,15 @@
   run_once: true
   when: compliance_audit_report_enabled | bool
 
+- name: Generate JSON compliance report
+  ansible.builtin.template:
+    src: report.json.j2
+    dest: "{{ compliance_audit_json_report_path }}"
+    mode: "0644"
+  delegate_to: localhost
+  run_once: true
+  when: compliance_audit_json_report_enabled | bool
+
 - name: Fail if any check failed
   ansible.builtin.assert:
     that: compliance_audit_results | selectattr('status', 'equalto', 'FAIL') | list | length == 0
