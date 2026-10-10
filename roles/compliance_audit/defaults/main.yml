@@ -10,6 +10,15 @@ compliance_audit_severity_weights:
   high: 3
   medium: 2
   low: 1
+# Generate one remediation plan (IOS commands) per non-compliant device
+compliance_audit_remediation_enabled: true
+compliance_audit_remediation_dir: "{{ playbook_dir }}/../reports/remediation"
+# Site-specific values used in remediation commands (override them in your inventory)
+compliance_audit_remediation_syslog_host: "<syslog-server-ip>"
+compliance_audit_remediation_banner: "Authorized access only. Activity is monitored."
+compliance_audit_remediation_vty_timeout: 10
+compliance_audit_remediation_mgmt_acl: "MGMT-ACCESS"
+compliance_audit_remediation_mgmt_network: "<mgmt-network> <wildcard>"
 # Generate a consolidated HTML report for all audited devices
 compliance_audit_report_enabled: true
 compliance_audit_report_path: "{{ playbook_dir }}/../reports/compliance-report.html"

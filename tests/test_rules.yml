@@ -4,6 +4,7 @@
   connection: local
   gather_facts: false
   vars_files:
+    - ../roles/compliance_audit/defaults/main.yml
     - ../rules/cisco_ios.yml
     - rule_cases.yml
   vars:
@@ -17,6 +18,18 @@
           - rule_test_cases | selectattr('rule', 'equalto', item.id) | selectattr('expect', 'equalto', 'PASS') | list | length > 0
           - rule_test_cases | selectattr('rule', 'equalto', item.id) | selectattr('expect', 'equalto', 'FAIL') | list | length > 0
         fail_msg: "{{ item.id }} is missing a PASS or FAIL test case"
+        quiet: true
+      loop: "{{ compliance_checks }}"
+      loop_control:
+        label: "{{ item.id }}"
+
+    - name: Every rule must define a remediation (or a manual note)
+      ansible.builtin.assert:
+        that: >-
+          item.remediation is defined
+          or item.remediation_note is defined
+          or (item.type | default('regex')) == 'parsed'
+        fail_msg: "{{ item.id }} has no remediation and no remediation_note"
         quiet: true
       loop: "{{ compliance_checks }}"
       loop_control:

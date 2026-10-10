@@ -13,6 +13,7 @@ Network compliance audit framework built with Ansible. It checks network device 
 - **Data-driven rules**: compliance checks are defined in YAML, not hard-coded in tasks. Adding a check means adding four lines of YAML.
 - **Full audit, then verdict**: every check runs on every device; the play only fails at the end if a device is non-compliant.
 - **Consolidated HTML report**: one report for all devices, with per-device scores and check details.
+- **Remediation plans**: for every non-compliant device, a ready-to-review IOS command file (`reports/remediation/<device>.cfg`) that fixes each finding. Site-specific values (syslog server, management network) come from the inventory; fixes that need a human decision, like secrets, are flagged as manual. Nothing is ever pushed automatically.
 - **JSON export**: the same results as machine-readable JSON, ready for a SIEM, a GRC tool or a CI gate. The CI publishes a summary table on every run.
 - **Weighted scoring**: each rule has a severity (high / medium / low); the compliance score weights findings accordingly, so a single critical gap costs more than several minor ones.
 - **Two rule engines**: simple rules match the raw config with a regex; structural rules (`type: parsed`) parse the config with `cisco.ios` resource modules (`state: parsed`) and reason on structured data, e.g. *every interface with no description, no switchport config and no IP must be shut down*.
@@ -60,6 +61,20 @@ ansible-playbook playbooks/audit.yml
 open reports/compliance-report.html   # macOS (use xdg-open on Linux)
 ```
 
+Example remediation plan (`reports/remediation/SW1.cfg`):
+
+```
+! CHECK-008 [HIGH] VTY access must be restricted with an access-class
+ip access-list standard MGMT-ACCESS
+ permit 192.168.100.0 0.0.0.255
+line vty 0 4
+ access-class MGMT-ACCESS in
+!
+! CHECK-009 [MEDIUM] Unused interfaces must be administratively shut down
+interface GigabitEthernet0/2
+ shutdown
+```
+
 Query the JSON report, e.g. list every failed high-severity check:
 
 ```bash
@@ -76,6 +91,10 @@ The sample configs are intentionally imperfect: `R1` is non-compliant and `SW1` 
 | `compliance_audit_config_file` | `""` | Path to the device configuration to audit |
 | `compliance_audit_fail_on_noncompliance` | `true` | Fail the host if at least one check fails |
 | `compliance_audit_severity_weights` | `{high: 3, medium: 2, low: 1}` | Weight of each severity in the compliance score |
+| `compliance_audit_remediation_enabled` | `true` | Generate per-device remediation plans |
+| `compliance_audit_remediation_syslog_host` | `<syslog-server-ip>` | Syslog server used in remediation commands |
+| `compliance_audit_remediation_mgmt_network` | `<mgmt-network> <wildcard>` | Network allowed on VTY lines |
+| `compliance_audit_remediation_mgmt_acl` | `MGMT-ACCESS` | Name of the management ACL |
 | `compliance_audit_json_report_enabled` | `true` | Generate the JSON report |
 | `compliance_audit_json_report_path` | `reports/compliance-report.json` | JSON report output path |
 | `compliance_audit_report_enabled` | `true` | Generate the HTML report |
@@ -97,7 +116,7 @@ The sample configs are intentionally imperfect: `R1` is non-compliant and `SW1` 
 - [x] **Level 1**: inventory, first checks (SSHv2, telnet)
 - [x] **Level 2**: role, YAML-defined rules, HTML report
 - [ ] **Level 3**: structured parsing with resource modules *(in progress)*, live devices (GNS3 lab)
-- [ ] **Level 4**: remediation (check/diff mode, config backup, rolling changes)
+- [ ] **Level 4**: remediation: per-device remediation plans *(done)*; apply with check/diff mode, config backup, rolling changes *(next, on the GNS3 lab)*
 - [ ] **Level 5**: custom plugins, Molecule tests, Execution Environment, AWX
 
 ## License

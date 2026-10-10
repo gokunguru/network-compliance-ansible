@@ -6,6 +6,12 @@
     compliance_audit_check_result:
       status: "{{ 'PASS' if offending | length == 0 else 'FAIL' }}"
       details: "{{ offending }}"
+      remediation: >-
+        {%- set blocks = [] -%}
+        {%- for name in offending -%}
+        {%- set _ = blocks.append({'parents': ['interface ' ~ name], 'lines': ['shutdown']}) -%}
+        {%- endfor -%}
+        {{ blocks }}
   vars:
     used_l2: "{{ compliance_audit_parsed.l2_interfaces | selectattr('mode', 'defined') | map(attribute='name') | list
       + compliance_audit_parsed.l2_interfaces | selectattr('access', 'defined') | map(attribute='name') | list

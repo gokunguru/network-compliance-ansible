@@ -13,3 +13,5 @@
       weight: "{{ compliance_audit_severity_weights[compliance_audit_check.severity | default('medium')] }}"
       status: "{{ compliance_audit_check_result.status }}"
       details: "{{ compliance_audit_check_result.details | default([]) }}"
+      remediation: "{{ compliance_audit_check_result.remediation | default([]) }}"
+      remediation_note: ""

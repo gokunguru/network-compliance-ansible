@@ -60,6 +60,7 @@ jobs:
           path: |
             reports/compliance-report.html
             reports/compliance-report.json
+            reports/remediation/
 
   secrets:
     runs-on: ubuntu-24.04
