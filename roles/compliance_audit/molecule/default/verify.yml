@@ -1,0 +1,60 @@
+---
+- name: Verify
+  hosts: localhost
+  gather_facts: false
+  vars:
+    output_dir: "{{ lookup('env', 'MOLECULE_EPHEMERAL_DIRECTORY') }}/reports"
+    report: "{{ lookup('ansible.builtin.file', output_dir ~ '/compliance-report.json') | from_json }}"
+    compliant: "{{ report.devices | selectattr('name', 'equalto', 'compliant') | first }}"
+    noncompliant: "{{ report.devices | selectattr('name', 'equalto', 'noncompliant') | first }}"
+    noncompliant_plan: "{{ lookup('ansible.builtin.file', output_dir ~ '/remediation/noncompliant.cfg') }}"
+  tasks:
+    - name: Stat generated outputs
+      ansible.builtin.stat:
+        path: "{{ output_dir }}/{{ item }}"
+      register: compliance_audit_outputs
+      loop:
+        - compliance-report.html
+        - compliance-report.json
+        - remediation/noncompliant.cfg
+        - remediation/compliant.cfg
+
+    - name: HTML, JSON and the non-compliant remediation plan exist, no plan for the compliant device
+      ansible.builtin.assert:
+        that:
+          - compliance_audit_outputs.results[0].stat.exists
+          - compliance_audit_outputs.results[1].stat.exists
+          - compliance_audit_outputs.results[2].stat.exists
+          - not compliance_audit_outputs.results[3].stat.exists
+
+    - name: Golden config passes every check
+      ansible.builtin.assert:
+        that:
+          - compliant.compliant
+          - compliant.score == 100
+          - compliant.results | selectattr('status', 'equalto', 'FAIL') | list | length == 0
+        fail_msg: "Failed checks: {{ compliant.results | selectattr('status', 'equalto', 'FAIL') | map(attribute='id') | list }}"
+
+    - name: Non-compliant config fails every check
+      ansible.builtin.assert:
+        that:
+          - not noncompliant.compliant
+          - noncompliant.score == 0
+          - noncompliant.results | selectattr('status', 'equalto', 'PASS') | list | length == 0
+        fail_msg: "Unexpected passes: {{ noncompliant.results | selectattr('status', 'equalto', 'PASS') | map(attribute='id') | list }}"
+
+    - name: Summary matches the device results
+      ansible.builtin.assert:
+        that:
+          - report.summary.devices == 2
+          - report.summary.compliant_devices == 1
+          - report.summary.checks == report.devices | map(attribute='results') | map('length') | sum
+          - report.summary.high_severity_findings == noncompliant.results | selectattr('severity', 'equalto', 'high') | list | length
+
+    - name: Remediation plan contains the expected fixes
+      ansible.builtin.assert:
+        that:
+          - "'transport input ssh' in noncompliant_plan"
+          - "'logging host 192.168.100.250' in noncompliant_plan"
+          - "'interface GigabitEthernet0/1\n shutdown' in noncompliant_plan"
+          - "'MANUAL:' in noncompliant_plan"
