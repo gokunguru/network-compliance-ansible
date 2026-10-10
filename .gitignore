@@ -9,6 +9,8 @@ inventories/lab/
 .venv/
 venv/
 __pycache__/
+.pytest_cache/
+.ruff_cache/
 reports/*.html
 reports/*.json
 reports/remediation/
