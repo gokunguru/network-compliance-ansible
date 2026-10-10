@@ -1,0 +1,23 @@
+---
+# Runs one parsed-rule test case through the real role code (parse + named check).
+- name: Load test config | {{ test_case.rule ~ " " ~ test_case.desc }}
+  ansible.builtin.set_fact:
+    compliance_audit_config: "{{ test_case.config }}"
+
+- name: Parse test config | {{ test_case.rule ~ " " ~ test_case.desc }}
+  ansible.builtin.include_role:
+    name: compliance_audit
+    tasks_from: parse.yml
+
+- name: Run check | {{ test_case.rule ~ " " ~ test_case.desc }}
+  ansible.builtin.include_role:
+    name: compliance_audit
+    tasks_from: "checks/{{ (compliance_checks | selectattr('id', 'equalto', test_case.rule) | first).check }}.yml"
+  vars:
+    compliance_audit_check: "{{ compliance_checks | selectattr('id', 'equalto', test_case.rule) | first }}"
+
+- name: Record outcome | {{ test_case.rule ~ " " ~ test_case.desc }}
+  ansible.builtin.set_fact:
+    rule_test_failures: "{{ rule_test_failures | default([]) + ([test_error] if compliance_audit_check_result.status != test_case.expect else []) }}"
+  vars:
+    test_error: "{{ test_case.rule }} ({{ test_case.desc }}): expected {{ test_case.expect }}, got {{ compliance_audit_check_result.status }}"

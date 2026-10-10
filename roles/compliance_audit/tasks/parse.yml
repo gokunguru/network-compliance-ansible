@@ -1,0 +1,33 @@
+---
+# Parse the device config into structured data with cisco.ios resource modules.
+# state: parsed never contacts the device: the modules only need a network
+# connection type to be declared, which is why it is set here.
+- name: Parse configuration with cisco.ios resource modules
+  vars:
+    ansible_connection: ansible.netcommon.network_cli
+    ansible_network_os: cisco.ios.ios
+  block:
+    - name: Parse interfaces
+      cisco.ios.ios_interfaces:
+        running_config: "{{ compliance_audit_config }}"
+        state: parsed
+      register: compliance_audit_parsed_interfaces
+
+    - name: Parse L2 interfaces
+      cisco.ios.ios_l2_interfaces:
+        running_config: "{{ compliance_audit_config }}"
+        state: parsed
+      register: compliance_audit_parsed_l2
+
+    - name: Parse L3 interfaces
+      cisco.ios.ios_l3_interfaces:
+        running_config: "{{ compliance_audit_config }}"
+        state: parsed
+      register: compliance_audit_parsed_l3
+
+- name: Store parsed configuration
+  ansible.builtin.set_fact:
+    compliance_audit_parsed:
+      interfaces: "{{ compliance_audit_parsed_interfaces.parsed | default([]) }}"
+      l2_interfaces: "{{ compliance_audit_parsed_l2.parsed | default([]) }}"
+      l3_interfaces: "{{ compliance_audit_parsed_l3.parsed | default([]) }}"

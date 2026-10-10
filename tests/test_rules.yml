@@ -6,6 +6,9 @@
   vars_files:
     - ../rules/cisco_ios.yml
     - rule_cases.yml
+  vars:
+    regex_rule_ids: "{{ compliance_checks | rejectattr('type', 'defined') | map(attribute='id') | list
+      + compliance_checks | selectattr('type', 'defined') | selectattr('type', 'equalto', 'regex') | map(attribute='id') | list }}"
 
   tasks:
     - name: Every rule must have at least one PASS and one FAIL case
@@ -19,16 +22,23 @@
       loop_control:
         label: "{{ item.id }}"
 
-    - name: Evaluate each test case
+    - name: Evaluate regex test cases
       ansible.builtin.set_fact:
         rule_test_failures: "{{ rule_test_failures | default([]) + ([test_error] if test_status != item.expect else []) }}"
       vars:
         test_error: "{{ item.rule }} ({{ item.desc }}): expected {{ item.expect }}, got {{ test_status }}"
         test_rule: "{{ compliance_checks | selectattr('id', 'equalto', item.rule) | first }}"
         test_status: "{{ 'PASS' if (item.config is search(test_rule.pattern)) == (test_rule.expect == 'present') else 'FAIL' }}"
-      loop: "{{ rule_test_cases }}"
+      loop: "{{ rule_test_cases | selectattr('rule', 'in', regex_rule_ids) | list }}"
       loop_control:
         label: "{{ item.rule }} - {{ item.desc }}"
+
+    - name: Evaluate parsed test cases
+      ansible.builtin.include_tasks: run_parsed_case.yml
+      loop: "{{ rule_test_cases | rejectattr('rule', 'in', regex_rule_ids) | list }}"
+      loop_control:
+        loop_var: test_case
+        label: "{{ test_case.rule }} - {{ test_case.desc }}"
 
     - name: All test cases must match their expected status
       ansible.builtin.assert:

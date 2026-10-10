@@ -14,6 +14,7 @@ Network compliance audit framework built with Ansible. It checks network device 
 - **Full audit, then verdict**: every check runs on every device; the play only fails at the end if a device is non-compliant.
 - **Consolidated HTML report**: one report for all devices, with per-device scores and check details.
 - **Weighted scoring**: each rule has a severity (high / medium / low); the compliance score weights findings accordingly, so a single critical gap costs more than several minor ones.
+- **Two rule engines**: simple rules match the raw config with a regex; structural rules (`type: parsed`) parse the config with `cisco.ios` resource modules (`state: parsed`) and reason on structured data, e.g. *every interface with no description, no switchport config and no IP must be shut down*.
 - **Offline mode**: audits configuration files without any live device, which makes the whole project testable in CI.
 - **Quality gates**: `ansible-lint` (production profile) and `gitleaks` secret scanning on every push.
 
@@ -46,6 +47,7 @@ A rule looks like this:
 | CHECK-006 | Login banner must be configured |
 | CHECK-007 | VTY lines must have an idle timeout |
 | CHECK-008 | VTY access must be restricted with an access-class |
+| CHECK-009 | Unused interfaces must be administratively shut down *(parsed)* |
 
 ## Quick start
 
@@ -85,7 +87,7 @@ The sample configs are intentionally imperfect: `R1` is non-compliant and `SW1` 
 
 - [x] **Level 1**: inventory, first checks (SSHv2, telnet)
 - [x] **Level 2**: role, YAML-defined rules, HTML report
-- [ ] **Level 3**: live devices (GNS3 lab), resource modules, `show` output parsing
+- [ ] **Level 3**: structured parsing with resource modules *(in progress)*, live devices (GNS3 lab)
 - [ ] **Level 4**: remediation (check/diff mode, config backup, rolling changes)
 - [ ] **Level 5**: custom plugins, Molecule tests, Execution Environment, AWX
 

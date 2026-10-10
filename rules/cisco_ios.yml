@@ -3,6 +3,9 @@
 # expect: present -> the pattern MUST be found in the config
 # expect: absent  -> the pattern MUST NOT be found in the config
 # severity: high | medium | low (defaults to medium)
+# type: regex (default) -> pattern/expect are matched against the raw config
+# type: parsed          -> the config is parsed with cisco.ios resource modules and
+#                          the named check in roles/compliance_audit/tasks/checks/ is run
 compliance_checks:
   - id: CHECK-001
     title: Telnet must be disabled on VTY lines
@@ -44,3 +47,8 @@ compliance_checks:
     severity: high
     pattern: '(?m)^line vty[^\n]*\n(?: [^\n]*\n)*? access-class \S+ in'
     expect: present
+  - id: CHECK-009
+    title: Unused interfaces must be administratively shut down
+    severity: medium
+    type: parsed
+    check: unused_interfaces_shutdown
