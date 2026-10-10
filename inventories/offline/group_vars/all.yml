@@ -1,3 +1,6 @@
 ---
 ansible_connection: local
 config_file: "{{ playbook_dir }}/../samples/configs/{{ inventory_hostname }}.cfg"
+# Lab values for remediation plans
+compliance_audit_remediation_syslog_host: 192.168.100.250
+compliance_audit_remediation_mgmt_network: 192.168.100.0 0.0.0.255

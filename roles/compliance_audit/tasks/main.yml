@@ -17,6 +17,8 @@
       severity: "{{ item.severity | default('medium') }}"
       weight: "{{ compliance_audit_severity_weights[item.severity | default('medium')] }}"
       status: "{{ 'PASS' if (compliance_audit_config is search(item.pattern)) == (item.expect == 'present') else 'FAIL' }}"
+      remediation: "{{ item.remediation | default([]) }}"
+      remediation_note: "{{ item.remediation_note | default('') }}"
   loop: "{{ compliance_audit_checks | rejectattr('type', 'defined') | list
     + compliance_audit_checks | selectattr('type', 'defined') | selectattr('type', 'equalto', 'regex') | list }}"
   loop_control:
@@ -50,6 +52,25 @@
 - name: Show weighted compliance score
   ansible.builtin.debug:
     msg: "Weighted compliance score: {{ compliance_audit_score }}%"
+
+- name: Create remediation plan directory
+  ansible.builtin.file:
+    path: "{{ compliance_audit_remediation_dir }}"
+    state: directory
+    mode: "0755"
+  delegate_to: localhost
+  run_once: true
+  when: compliance_audit_remediation_enabled | bool
+
+- name: Generate remediation plan
+  ansible.builtin.template:
+    src: remediation.cfg.j2
+    dest: "{{ compliance_audit_remediation_dir }}/{{ inventory_hostname }}.cfg"
+    mode: "0644"
+  delegate_to: localhost
+  when:
+    - compliance_audit_remediation_enabled | bool
+    - compliance_audit_results | selectattr('status', 'equalto', 'FAIL') | list | length > 0
 
 - name: Generate HTML compliance report
   ansible.builtin.template:

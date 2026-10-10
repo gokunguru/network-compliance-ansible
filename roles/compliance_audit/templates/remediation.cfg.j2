@@ -1,0 +1,21 @@
+! Remediation plan for {{ inventory_hostname }}
+! Generated {{ now(utc=true).strftime('%Y-%m-%d %H:%M UTC') }} by network-compliance-ansible
+! REVIEW BEFORE APPLYING. Nothing has been pushed to the device.
+!
+{% for r in compliance_audit_results | selectattr('status', 'equalto', 'FAIL') %}
+! {{ r.id }} [{{ r.severity | upper }}] {{ r.title }}
+{%   if r.remediation | default([]) %}
+{%     for block in r.remediation %}
+{%       for parent in block.parents | default([]) %}
+{{ parent }}
+{%       endfor %}
+{%       for line in block.lines %}
+{{ ' ' if block.parents | default([]) else '' }}{{ line }}
+{%       endfor %}
+{%     endfor %}
+{%   else %}
+! MANUAL: {{ r.remediation_note | default('No automated remediation available.', true) }}
+{%   endif %}
+!
+{% endfor %}
+end
