@@ -1,0 +1,20 @@
+---
+# An interface is considered unused when it has no description, no switchport
+# configuration and no IP address. Unused interfaces must be shut down.
+- name: Find unused interfaces left enabled | {{ compliance_audit_check.id }}
+  ansible.builtin.set_fact:
+    compliance_audit_check_result:
+      status: "{{ 'PASS' if offending | length == 0 else 'FAIL' }}"
+      details: "{{ offending }}"
+  vars:
+    used_l2: "{{ compliance_audit_parsed.l2_interfaces | selectattr('mode', 'defined') | map(attribute='name') | list
+      + compliance_audit_parsed.l2_interfaces | selectattr('access', 'defined') | map(attribute='name') | list
+      + compliance_audit_parsed.l2_interfaces | selectattr('trunk', 'defined') | map(attribute='name') | list }}"
+    used_l3: "{{ compliance_audit_parsed.l3_interfaces | selectattr('ipv4', 'defined') | map(attribute='name') | list
+      + compliance_audit_parsed.l3_interfaces | selectattr('ipv6', 'defined') | map(attribute='name') | list }}"
+    offending: "{{ compliance_audit_parsed.interfaces
+      | rejectattr('description', 'defined')
+      | selectattr('enabled', 'defined') | selectattr('enabled')
+      | map(attribute='name')
+      | reject('in', used_l2 + used_l3)
+      | list }}"

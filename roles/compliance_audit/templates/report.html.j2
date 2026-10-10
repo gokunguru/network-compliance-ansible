@@ -34,6 +34,7 @@
   .sev { font-size:12px; font-weight:700; text-transform:uppercase; }
   .sev-high { color:#cf222e; } .sev-medium { color:#9a6700; } .sev-low { color:#656d76; }
   code { font-size:13px; }
+  .details { color:var(--muted); font-size:12px; margin-top:2px; font-family: ui-monospace, Menlo, monospace; }
 </style>
 </head>
 <body>
@@ -74,7 +75,7 @@
     <thead><tr><th>Status</th><th>Severity</th><th>ID</th><th>Check</th></tr></thead>
     <tbody>
 {%   for r in results %}
-      <tr><td><span class="badge {{ r.status }}">{{ r.status }}</span></td><td><span class="sev sev-{{ r.severity }}">{{ r.severity }}</span></td><td><code>{{ r.id }}</code></td><td>{{ r.title }}</td></tr>
+      <tr><td><span class="badge {{ r.status }}">{{ r.status }}</span></td><td><span class="sev sev-{{ r.severity }}">{{ r.severity }}</span></td><td><code>{{ r.id }}</code></td><td>{{ r.title }}{% if r.details | default([]) %}<div class="details">{{ r.details | join(', ') }}</div>{% endif %}</td></tr>
 {%   endfor %}
     </tbody>
   </table>

@@ -1,0 +1,15 @@
+---
+- name: Run structured check | {{ compliance_audit_check.id }}
+  ansible.builtin.include_tasks: "checks/{{ compliance_audit_check.check }}.yml"
+
+- name: Record result | {{ compliance_audit_check.id }}
+  ansible.builtin.set_fact:
+    compliance_audit_results: "{{ compliance_audit_results | default([]) + [compliance_audit_result] }}"
+  vars:
+    compliance_audit_result:
+      id: "{{ compliance_audit_check.id }}"
+      title: "{{ compliance_audit_check.title }}"
+      severity: "{{ compliance_audit_check.severity | default('medium') }}"
+      weight: "{{ compliance_audit_severity_weights[compliance_audit_check.severity | default('medium')] }}"
+      status: "{{ compliance_audit_check_result.status }}"
+      details: "{{ compliance_audit_check_result.details | default([]) }}"

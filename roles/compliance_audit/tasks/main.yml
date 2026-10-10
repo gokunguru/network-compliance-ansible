@@ -3,7 +3,11 @@
   ansible.builtin.set_fact:
     compliance_audit_config: "{{ lookup('ansible.builtin.file', compliance_audit_config_file) }}"
 
-- name: Evaluate compliance checks
+- name: Parse configuration for structured checks
+  ansible.builtin.include_tasks: parse.yml
+  when: compliance_audit_checks | selectattr('type', 'defined') | selectattr('type', 'equalto', 'parsed') | list | length > 0
+
+- name: Evaluate regex checks
   ansible.builtin.set_fact:
     compliance_audit_results: "{{ compliance_audit_results | default([]) + [compliance_audit_result] }}"
   vars:
@@ -13,9 +17,21 @@
       severity: "{{ item.severity | default('medium') }}"
       weight: "{{ compliance_audit_severity_weights[item.severity | default('medium')] }}"
       status: "{{ 'PASS' if (compliance_audit_config is search(item.pattern)) == (item.expect == 'present') else 'FAIL' }}"
-  loop: "{{ compliance_audit_checks }}"
+  loop: "{{ compliance_audit_checks | rejectattr('type', 'defined') | list
+    + compliance_audit_checks | selectattr('type', 'defined') | selectattr('type', 'equalto', 'regex') | list }}"
   loop_control:
     label: "{{ item.id }}"
+
+- name: Evaluate parsed checks
+  ansible.builtin.include_tasks: evaluate_parsed.yml
+  loop: "{{ compliance_audit_checks | selectattr('type', 'defined') | selectattr('type', 'equalto', 'parsed') | list }}"
+  loop_control:
+    loop_var: compliance_audit_check
+    label: "{{ compliance_audit_check.id }}"
+
+- name: Sort results by check ID
+  ansible.builtin.set_fact:
+    compliance_audit_results: "{{ compliance_audit_results | default([]) | sort(attribute='id') }}"
 
 - name: Compute weighted compliance score
   ansible.builtin.set_fact:
