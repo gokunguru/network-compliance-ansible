@@ -24,6 +24,22 @@ jobs:
       - name: Syntax check
         run: ansible-playbook playbooks/audit.yml --syntax-check
 
+  unit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install test tools
+        run: pip install pytest ruff
+      - name: Ruff (lint + format)
+        run: |
+          ruff check .
+          ruff format --check .
+      - name: Unit tests (filter plugins)
+        run: pytest -q tests/unit
+
   audit:
     runs-on: ubuntu-24.04
     needs: lint

@@ -18,7 +18,8 @@ Network compliance audit framework built with Ansible. It checks network device 
 - **Weighted scoring**: each rule has a severity (high / medium / low); the compliance score weights findings accordingly, so a single critical gap costs more than several minor ones.
 - **Two rule engines**: simple rules match the raw config with a regex; structural rules (`type: parsed`) parse the config with `cisco.ios` resource modules (`state: parsed`) and reason on structured data, e.g. *every interface with no description, no switchport config and no IP must be shut down*.
 - **Offline mode**: audits configuration files without any live device, which makes the whole project testable in CI.
-- **Quality gates**: `ansible-lint` (production profile) and `gitleaks` secret scanning on every push.
+- **Custom filter plugin**: structural checks are implemented as Python filters (`roles/compliance_audit/filter_plugins/`), covered by `pytest` unit tests.
+- **Quality gates**: `ansible-lint` (production profile), `ruff`, `pytest`, rule regression tests and `gitleaks` secret scanning on every push.
 
 ## How it works
 
@@ -103,12 +104,16 @@ The sample configs are intentionally imperfect: `R1` is non-compliant and `SW1` 
 ## Project structure
 
 ```
-├── inventories/offline/      # Inventory for offline (file-based) audits
-├── playbooks/audit.yml       # Entry point
-├── roles/compliance_audit/   # Audit logic, report template
-├── rules/cisco_ios.yml       # Compliance rules
-├── samples/configs/          # Sample device configurations
-└── .github/workflows/ci.yml  # Lint + secret scanning
+├── inventories/offline/            # Inventory for offline (file-based) audits
+├── playbooks/audit.yml             # Entry point
+├── roles/compliance_audit/
+│   ├── tasks/                      # Audit flow, parsing, structural checks
+│   ├── filter_plugins/             # Python filters used by structural checks
+│   └── templates/                  # HTML, JSON and remediation outputs
+├── rules/cisco_ios.yml             # Compliance rules
+├── samples/configs/                # Sample device configurations
+├── tests/                          # Rule regression cases + Python unit tests
+└── .github/workflows/ci.yml        # Lint, unit tests, audit, secret scanning
 ```
 
 ## Roadmap
@@ -117,7 +122,7 @@ The sample configs are intentionally imperfect: `R1` is non-compliant and `SW1` 
 - [x] **Level 2**: role, YAML-defined rules, HTML report
 - [ ] **Level 3**: structured parsing with resource modules *(in progress)*, live devices (GNS3 lab)
 - [ ] **Level 4**: remediation: per-device remediation plans *(done)*; apply with check/diff mode, config backup, rolling changes *(next, on the GNS3 lab)*
-- [ ] **Level 5**: custom plugins, Molecule tests, Execution Environment, AWX
+- [ ] **Level 5**: custom filter plugin with unit tests *(done)*; Molecule tests, Execution Environment, AWX *(next)*
 
 ## License
 
