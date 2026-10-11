@@ -20,6 +20,7 @@ Network compliance audit framework built with Ansible. It checks network device 
 - **Offline mode**: audits configuration files without any live device, which makes the whole project testable in CI.
 - **Custom filter plugin**: structural checks are implemented as Python filters (`roles/compliance_audit/filter_plugins/`), covered by `pytest` unit tests.
 - **Quality gates**: `ansible-lint` (production profile), `ruff`, `pytest`, rule regression tests, a Molecule scenario and `gitleaks` secret scanning on every push.
+- **Execution Environment**: `execution-environment.yml` builds a container image with ansible-core, the collections and their network libraries, so the audit runs the same on a laptop, in CI or in AWX. A dedicated workflow builds it and runs the audit inside it.
 - **Molecule role test**: the role runs end to end against a golden config (must score 100%, no remediation plan) and a fully non-compliant config (must fail every check), then every output is verified.
 
 ## How it works
@@ -77,6 +78,14 @@ interface GigabitEthernet0/2
  shutdown
 ```
 
+Run in a container (Execution Environment):
+
+```bash
+pip install ansible-builder ansible-navigator
+ansible-builder build -t network-compliance-ee:latest
+ansible-navigator run playbooks/audit.yml --eei network-compliance-ee:latest --pp never -m stdout
+```
+
 Query the JSON report, e.g. list every failed high-severity check:
 
 ```bash
@@ -115,7 +124,8 @@ The sample configs are intentionally imperfect: `R1` is non-compliant and `SW1` 
 ├── rules/cisco_ios.yml             # Compliance rules
 ├── samples/configs/                # Sample device configurations
 ├── tests/                          # Rule regression cases + Python unit tests
-└── .github/workflows/ci.yml        # Lint, unit tests, audit, secret scanning
+├── execution-environment.yml       # Container image definition (ansible-builder)
+└── .github/workflows/              # CI (lint, tests, audit, secrets) + EE build
 ```
 
 ## Roadmap
@@ -124,7 +134,7 @@ The sample configs are intentionally imperfect: `R1` is non-compliant and `SW1` 
 - [x] **Level 2**: role, YAML-defined rules, HTML report
 - [ ] **Level 3**: structured parsing with resource modules *(in progress)*, live devices (GNS3 lab)
 - [ ] **Level 4**: remediation: per-device remediation plans *(done)*; apply with check/diff mode, config backup, rolling changes *(next, on the GNS3 lab)*
-- [ ] **Level 5**: custom filter plugin with unit tests, Molecule role tests *(done)*; Execution Environment, AWX *(next)*
+- [ ] **Level 5**: custom filter plugin with unit tests, Molecule role tests, Execution Environment *(done)*; AWX *(next)*
 
 ## License
 

@@ -15,3 +15,5 @@ reports/*.html
 reports/*.json
 reports/remediation/
 .DS_Store
+# ansible-builder build context
+context/

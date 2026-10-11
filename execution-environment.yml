@@ -1,0 +1,17 @@
+---
+# Execution Environment: a container image with everything the audit needs
+# (ansible-core, ansible-runner, the collections from requirements.yml and the
+# Python/system libraries those collections declare, e.g. ansible-pylibssh).
+# Build:  ansible-builder build -t network-compliance-ee:latest
+version: 3
+
+images:
+  base_image:
+    name: ghcr.io/ansible-community/community-ee-minimal:latest
+
+dependencies:
+  galaxy: requirements.yml
+
+options:
+  tags:
+    - network-compliance-ee:latest
