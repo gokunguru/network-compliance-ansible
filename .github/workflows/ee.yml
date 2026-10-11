@@ -1,0 +1,43 @@
+---
+name: Execution Environment
+
+on:
+  pull_request:
+    paths:
+      - execution-environment.yml
+      - requirements.yml
+      - .github/workflows/ee.yml
+  push:
+    branches: [main]
+    paths:
+      - execution-environment.yml
+      - requirements.yml
+      - .github/workflows/ee.yml
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install ansible-builder
+        run: pip install ansible-builder
+      - name: Build the Execution Environment
+        run: ansible-builder build -t network-compliance-ee:latest --container-runtime docker -v 3
+      - name: Show tool versions inside the EE
+        run: docker run --rm network-compliance-ee:latest ansible --version
+      - name: Run the offline audit inside the EE
+        run: |
+          docker run --rm \
+            --user "$(id -u):$(id -g)" -e HOME=/tmp \
+            -v "$PWD:/runner" -w /runner \
+            network-compliance-ee:latest \
+            ansible-playbook playbooks/audit.yml -e compliance_audit_fail_on_noncompliance=false
+      - name: Check the reports produced in the container
+        run: |
+          test -f reports/compliance-report.html
+          jq -e '.summary.devices == 2' reports/compliance-report.json
+          test -f reports/remediation/SW1.cfg
