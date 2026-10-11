@@ -1,0 +1,18 @@
+---
+- name: Converge
+  hosts: all
+  gather_facts: false
+  vars_files:
+    - ../../../../rules/cisco_ios.yml
+  tasks:
+    - name: Run the compliance audit role
+      ansible.builtin.include_role:
+        name: compliance_audit
+      vars:
+        compliance_audit_checks: "{{ compliance_checks }}"
+        compliance_audit_fail_on_noncompliance: false
+        compliance_audit_report_path: "{{ compliance_audit_output_dir }}/compliance-report.html"
+        compliance_audit_json_report_path: "{{ compliance_audit_output_dir }}/compliance-report.json"
+        compliance_audit_remediation_dir: "{{ compliance_audit_output_dir }}/remediation"
+        compliance_audit_remediation_syslog_host: 192.168.100.250
+        compliance_audit_remediation_mgmt_network: 192.168.100.0 0.0.0.255

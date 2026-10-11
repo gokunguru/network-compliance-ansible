@@ -40,6 +40,22 @@ jobs:
       - name: Unit tests (filter plugins)
         run: pytest -q tests/unit
 
+  molecule:
+    runs-on: ubuntu-24.04
+    needs: lint
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt molecule
+          ansible-galaxy collection install -r requirements.yml
+      - name: Molecule test (compliance_audit role)
+        working-directory: roles/compliance_audit
+        run: molecule test
+
   audit:
     runs-on: ubuntu-24.04
     needs: lint

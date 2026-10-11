@@ -1,0 +1,28 @@
+---
+# Role-level test: runs compliance_audit against two fake devices, offline,
+# and checks every output (results, score, HTML, JSON, remediation plans).
+driver:
+  name: default
+  options:
+    managed: false
+platforms:
+  - name: compliant
+  - name: noncompliant
+provisioner:
+  name: ansible
+  env:
+    ANSIBLE_ROLES_PATH: "${MOLECULE_PROJECT_DIRECTORY}/.."
+  inventory:
+    group_vars:
+      all:
+        ansible_connection: local
+        ansible_python_interpreter: "{{ ansible_playbook_python }}"
+        compliance_audit_config_file: "{{ playbook_dir }}/files/{{ inventory_hostname }}.cfg"
+        compliance_audit_output_dir: "{{ lookup('env', 'MOLECULE_EPHEMERAL_DIRECTORY') }}/reports"
+scenario:
+  # No idempotence step: every run stamps the reports with the current time,
+  # so the report templates are expected to change on each run.
+  test_sequence:
+    - syntax
+    - converge
+    - verify
