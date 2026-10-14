@@ -1,7 +1,27 @@
 ---
-- name: Load device config
+- name: Validate configuration source
+  ansible.builtin.assert:
+    that: compliance_audit_config_source in ['file', 'device']
+    fail_msg: "compliance_audit_config_source must be 'file' or 'device', got '{{ compliance_audit_config_source }}'"
+    quiet: true
+
+- name: Load device config from file
   ansible.builtin.set_fact:
     compliance_audit_config: "{{ lookup('ansible.builtin.file', compliance_audit_config_file) }}"
+  when: compliance_audit_config_source == 'file'
+
+- name: Read running configuration from the device
+  when: compliance_audit_config_source == 'device'
+  block:
+    - name: Run show running-config
+      cisco.ios.ios_command:
+        commands:
+          - show running-config
+      register: compliance_audit_running_config
+
+    - name: Use the device running configuration
+      ansible.builtin.set_fact:
+        compliance_audit_config: "{{ compliance_audit_running_config.stdout[0] }}"
 
 - name: Parse configuration for structured checks
   ansible.builtin.include_tasks: parse.yml

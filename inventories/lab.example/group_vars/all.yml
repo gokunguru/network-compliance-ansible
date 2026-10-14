@@ -1,0 +1,16 @@
+---
+ansible_connection: ansible.netcommon.network_cli
+ansible_network_os: cisco.ios.ios
+ansible_user: admin
+# Never store the real password here: put it in an Ansible Vault file, e.g.
+#   ansible-vault create inventories/lab/group_vars/vault.yml   (vault_lab_password: ...)
+ansible_password: "{{ vault_lab_password }}"
+ansible_become: true
+ansible_become_method: ansible.netcommon.enable
+ansible_become_password: "{{ vault_lab_password }}"
+
+compliance_audit_config_source: device
+
+# Lab values for remediation plans
+compliance_audit_remediation_syslog_host: 192.168.100.250
+compliance_audit_remediation_mgmt_network: 192.168.100.0 0.0.0.255

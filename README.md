@@ -78,6 +78,13 @@ interface GigabitEthernet0/2
  shutdown
 ```
 
+Audit live devices over SSH (see [docs/lab.md](docs/lab.md) for the GNS3 lab):
+
+```bash
+cp -r inventories/lab.example inventories/lab
+ansible-playbook -i inventories/lab playbooks/audit.yml --ask-vault-pass
+```
+
 Run in a container (Execution Environment):
 
 ```bash
@@ -98,6 +105,7 @@ The sample configs are intentionally imperfect: `R1` is non-compliant and `SW1` 
 
 | Variable | Default | Description |
 |---|---|---|
+| `compliance_audit_config_source` | `file` | `file` (offline) or `device` (`show running-config` over SSH) |
 | `compliance_audit_checks` | `[]` | List of checks to evaluate |
 | `compliance_audit_config_file` | `""` | Path to the device configuration to audit |
 | `compliance_audit_fail_on_noncompliance` | `true` | Fail the host if at least one check fails |
@@ -115,6 +123,8 @@ The sample configs are intentionally imperfect: `R1` is non-compliant and `SW1` 
 
 ```
 ├── inventories/offline/            # Inventory for offline (file-based) audits
+├── inventories/lab.example/        # Template inventory for live devices (SSH)
+├── lab/bootstrap/                  # Console bootstrap configs for the GNS3 lab
 ├── playbooks/audit.yml             # Entry point
 ├── roles/compliance_audit/
 │   ├── tasks/                      # Audit flow, parsing, structural checks

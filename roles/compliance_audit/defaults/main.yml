@@ -1,7 +1,11 @@
 ---
 # List of compliance checks to evaluate (id, title, pattern, expect)
 compliance_audit_checks: []
-# Path to the device configuration file to audit
+# Where to read the configuration from:
+#   file   -> compliance_audit_config_file (offline audit, CI)
+#   device -> 'show running-config' over SSH (requires a network_cli inventory)
+compliance_audit_config_source: file
+# Path to the device configuration file to audit (config_source: file)
 compliance_audit_config_file: ""
 # Fail the host at the end if at least one check failed
 compliance_audit_fail_on_noncompliance: true
