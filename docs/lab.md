@@ -58,3 +58,19 @@ ansible-playbook -i inventories/lab playbooks/audit.yml --ask-vault-pass
 `compliance_audit_config_source: device` (set in the lab inventory) makes the role read
 `show running-config` over SSH instead of a file. Reports and remediation plans are
 generated exactly as in offline mode.
+
+## 5. Remediate (closed loop)
+
+`playbooks/remediate.yml` audits each device, pushes the remediation blocks of every
+failed check with `cisco.ios.ios_config`, then audits again and fails if an automatable
+finding is still open. It runs one device at a time and stops at the first failure.
+
+```bash
+# Dry run: shows the exact commands, changes nothing
+ansible-playbook -i inventories/lab playbooks/remediate.yml --check --diff --ask-vault-pass
+
+# Apply (a backup of each running config is saved to reports/backups/ first)
+ansible-playbook -i inventories/lab playbooks/remediate.yml --diff --ask-vault-pass -e remediation_confirm=true
+```
+
+Findings marked as manual (CHECK-004, the enable secret) are reported, never changed.

@@ -1,0 +1,95 @@
+---
+# Closed-loop remediation for live devices:
+#   1. audit the device
+#   2. push the remediation blocks of every failed check with cisco.ios.ios_config
+#   3. audit again and fail if anything is still non-compliant
+#
+# Dry run (default, nothing is changed on the devices):
+#   ansible-playbook -i inventories/lab playbooks/remediate.yml --check --diff --ask-vault-pass
+# Apply:
+#   ansible-playbook -i inventories/lab playbooks/remediate.yml --diff --ask-vault-pass -e remediation_confirm=true
+- name: Remediate non-compliant network devices
+  hosts: all
+  gather_facts: false
+  serial: 1                 # one device at a time
+  max_fail_percentage: 0    # stop the rollout at the first failed device
+  vars_files:
+    - ../rules/cisco_ios.yml
+  vars:
+    remediation_confirm: false
+    remediation_backup_dir: "{{ playbook_dir }}/../reports/backups"
+
+  pre_tasks:
+    - name: Remediation only runs against live devices
+      ansible.builtin.assert:
+        that: compliance_audit_config_source | default('file') == 'device'
+        fail_msg: >-
+          Remediation needs live devices. Use the lab inventory (-i inventories/lab),
+          where compliance_audit_config_source is 'device'.
+        quiet: true
+
+    - name: Changes require an explicit confirmation outside check mode
+      ansible.builtin.assert:
+        that: ansible_check_mode or (remediation_confirm | bool)
+        fail_msg: "Refusing to change devices: run with --check first, then add -e remediation_confirm=true"
+        quiet: true
+
+  tasks:
+    - name: Audit before remediation
+      ansible.builtin.include_role:
+        name: compliance_audit
+      vars:
+        compliance_audit_checks: "{{ compliance_checks }}"
+        compliance_audit_fail_on_noncompliance: false
+        compliance_audit_report_enabled: false
+        compliance_audit_json_report_enabled: false
+
+    - name: Collect remediation blocks of failed checks
+      ansible.builtin.set_fact:
+        remediation_blocks: "{{ compliance_audit_results | selectattr('status', 'equalto', 'FAIL')
+          | map(attribute='remediation') | flatten }}"
+        remediation_manual: "{{ compliance_audit_results | selectattr('status', 'equalto', 'FAIL')
+          | selectattr('remediation', 'equalto', []) | map(attribute='id') | list }}"
+
+    - name: Report findings that need a human decision
+      ansible.builtin.debug:
+        msg: "Manual remediation required on {{ inventory_hostname }}: {{ remediation_manual | join(', ') }}"
+      when: remediation_manual | length > 0
+
+    - name: Back up the running configuration
+      cisco.ios.ios_config:
+        backup: true
+        backup_options:
+          dir_path: "{{ remediation_backup_dir }}"
+          filename: "{{ inventory_hostname }}.cfg"
+      when: remediation_blocks | length > 0
+
+    - name: Apply remediation blocks
+      cisco.ios.ios_config:
+        parents: "{{ item.parents | default(omit) }}"
+        lines: "{{ item.lines }}"
+      loop: "{{ remediation_blocks }}"
+      loop_control:
+        label: "{{ (item.parents | default([])) + item.lines }}"
+
+    - name: Save the configuration if it changed
+      cisco.ios.ios_config:
+        save_when: modified
+      when: not ansible_check_mode
+
+    - name: Audit after remediation
+      ansible.builtin.include_role:
+        name: compliance_audit
+      vars:
+        compliance_audit_checks: "{{ compliance_checks }}"
+        compliance_audit_fail_on_noncompliance: false
+      when: not ansible_check_mode
+
+    - name: Every automatable finding must be fixed
+      ansible.builtin.assert:
+        that: >-
+          compliance_audit_results | selectattr('status', 'equalto', 'FAIL')
+          | rejectattr('id', 'in', remediation_manual) | list | length == 0
+        fail_msg: "Still failing after remediation: {{ compliance_audit_results | selectattr('status', 'equalto', 'FAIL') | map(attribute='id') | list }}"
+        success_msg: "{{ inventory_hostname }} is compliant (manual items excluded: {{ remediation_manual | join(', ') or 'none' }})"
+      when: not ansible_check_mode
