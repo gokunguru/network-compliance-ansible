@@ -5,6 +5,10 @@
     fail_msg: "compliance_audit_config_source must be 'file' or 'device', got '{{ compliance_audit_config_source }}'"
     quiet: true
 
+- name: Reset results from any previous run of the role
+  ansible.builtin.set_fact:
+    compliance_audit_results: []
+
 - name: Load device config from file
   ansible.builtin.set_fact:
     compliance_audit_config: "{{ lookup('ansible.builtin.file', compliance_audit_config_file) }}"

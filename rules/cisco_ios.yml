@@ -53,7 +53,7 @@ compliance_checks:
     pattern: '(?m)^banner (login|motd) '
     expect: present
     remediation:
-      - lines: ["banner login ^C{{ compliance_audit_remediation_banner }}^C"]
+      - lines: ["banner login #{{ compliance_audit_remediation_banner }}#"]
   - id: CHECK-007
     title: VTY lines must have an idle timeout
     severity: medium
