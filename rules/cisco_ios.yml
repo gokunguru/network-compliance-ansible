@@ -77,3 +77,10 @@ compliance_checks:
     severity: medium
     type: parsed
     check: unused_interfaces_shutdown
+  - id: CHECK-010
+    title: An NTP server must be configured
+    severity: medium
+    pattern: '(?m)^ntp server \S+'
+    expect: present
+    remediation:
+      - lines: ["ntp server {{ compliance_audit_remediation_ntp_server }}"]

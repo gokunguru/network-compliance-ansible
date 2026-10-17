@@ -19,6 +19,7 @@ compliance_audit_remediation_enabled: true
 compliance_audit_remediation_dir: "{{ playbook_dir }}/../reports/remediation"
 # Site-specific values used in remediation commands (override them in your inventory)
 compliance_audit_remediation_syslog_host: "<syslog-server-ip>"
+compliance_audit_remediation_ntp_server: "<ntp-server-ip>"
 compliance_audit_remediation_banner: "Authorized access only. Activity is monitored."
 compliance_audit_remediation_vty_timeout: 10
 compliance_audit_remediation_mgmt_acl: "MGMT-ACCESS"
