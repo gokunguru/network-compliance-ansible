@@ -15,4 +15,5 @@
         compliance_audit_json_report_path: "{{ compliance_audit_output_dir }}/compliance-report.json"
         compliance_audit_remediation_dir: "{{ compliance_audit_output_dir }}/remediation"
         compliance_audit_remediation_syslog_host: 192.168.100.250
+        compliance_audit_remediation_ntp_server: 192.168.100.250
         compliance_audit_remediation_mgmt_network: 192.168.100.0 0.0.0.255
