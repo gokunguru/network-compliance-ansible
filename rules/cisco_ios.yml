@@ -84,3 +84,10 @@ compliance_checks:
     expect: present
     remediation:
       - lines: ["ntp server {{ compliance_audit_remediation_ntp_server }}"]
+  - id: CHECK-011
+    title: The HTTP server must be disabled
+    severity: high
+    pattern: '(?m)^ip http server'
+    expect: absent
+    remediation:
+      - lines: ["no ip http server"]
