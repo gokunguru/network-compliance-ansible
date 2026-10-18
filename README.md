@@ -55,6 +55,7 @@ A rule looks like this:
 | CHECK-008 | VTY access must be restricted with an access-class |
 | CHECK-009 | Unused interfaces must be administratively shut down *(parsed)* |
 | CHECK-010 | An NTP server must be configured |
+| CHECK-011 | The HTTP server must be disabled |
 
 ## Quick start
 
