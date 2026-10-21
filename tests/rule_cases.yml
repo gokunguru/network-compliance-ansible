@@ -40,6 +40,12 @@ rule_test_cases:
   - {rule: CHECK-011, expect: PASS, desc: "not configured", config: "hostname R1\n"}
   - {rule: CHECK-011, expect: PASS, desc: "HTTPS only", config: "no ip http server\nip http secure-server\n"}
   - {rule: CHECK-011, expect: FAIL, desc: "HTTP server enabled", config: "ip http server\n"}
+  # CHECK-012 - default SNMP communities
+  - {rule: CHECK-012, expect: PASS, desc: "no SNMP", config: "hostname R1\n"}
+  - {rule: CHECK-012, expect: PASS, desc: "custom community", config: "snmp-server community N3tM0n-2026 RO MGMT-ACCESS\n"}
+  - {rule: CHECK-012, expect: PASS, desc: "community name starting with public", config: "snmp-server community publicity RO\n"}
+  - {rule: CHECK-012, expect: FAIL, desc: "public RO", config: "snmp-server community public RO\n"}
+  - {rule: CHECK-012, expect: FAIL, desc: "private RW", config: "snmp-server community private RW\n"}
   # CHECK-009 - unused interfaces shut down (parsed)
   - {rule: CHECK-009, expect: PASS, desc: "unused port shut down", config: "interface GigabitEthernet0/2\n shutdown\n"}
   - {rule: CHECK-009, expect: PASS, desc: "port with description", config: "interface GigabitEthernet0/2\n description Uplink\n no shutdown\n"}
