@@ -91,3 +91,10 @@ compliance_checks:
     expect: absent
     remediation:
       - lines: ["no ip http server"]
+  - id: CHECK-012
+    title: Default SNMP communities (public, private) must not be used
+    severity: high
+    pattern: '(?m)^snmp-server community (public|private)\b'
+    expect: absent
+    remediation:
+      - lines: ["no snmp-server community public", "no snmp-server community private"]
