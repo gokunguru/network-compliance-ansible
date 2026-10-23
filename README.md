@@ -4,6 +4,7 @@
 ![Execution Environment](https://github.com/gokunguru/network-compliance-ansible/actions/workflows/ee.yml/badge.svg)
 ![Ansible](https://img.shields.io/badge/ansible--core-2.16%2B-EE0000?logo=ansible)
 ![License](https://img.shields.io/badge/license-MIT-blue)
+![Release](https://img.shields.io/github/v/release/gokunguru/network-compliance-ansible)
 
 Network compliance **audit and remediation** framework built with Ansible. It checks Cisco IOS configurations against security rules, scores each device, produces HTML/JSON reports and per-device remediation plans, and can apply the fixes to live devices in a closed loop.
 
