@@ -74,6 +74,7 @@ A rule carries its detection, severity and fix:
 | CHECK-010 | An NTP server must be configured | medium | regex |
 | CHECK-011 | The HTTP server must be disabled | high | regex |
 | CHECK-012 | Default SNMP communities (public, private) must not be used | high | regex |
+| CHECK-013 | IP source routing must be disabled | medium | regex |
 
 ## Quick start
 
