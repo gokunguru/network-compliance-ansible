@@ -46,6 +46,10 @@ rule_test_cases:
   - {rule: CHECK-012, expect: PASS, desc: "community name starting with public", config: "snmp-server community publicity RO\n"}
   - {rule: CHECK-012, expect: FAIL, desc: "public RO", config: "snmp-server community public RO\n"}
   - {rule: CHECK-012, expect: FAIL, desc: "private RW", config: "snmp-server community private RW\n"}
+  # CHECK-013 - IP source routing (enabled by default on IOS)
+  - {rule: CHECK-013, expect: PASS, desc: "source routing disabled", config: "no ip source-route\n"}
+  - {rule: CHECK-013, expect: FAIL, desc: "default (not configured)", config: "hostname R1\n"}
+  - {rule: CHECK-013, expect: FAIL, desc: "explicitly enabled", config: "ip source-route\n"}
   # CHECK-009 - unused interfaces shut down (parsed)
   - {rule: CHECK-009, expect: PASS, desc: "unused port shut down", config: "interface GigabitEthernet0/2\n shutdown\n"}
   - {rule: CHECK-009, expect: PASS, desc: "port with description", config: "interface GigabitEthernet0/2\n description Uplink\n no shutdown\n"}

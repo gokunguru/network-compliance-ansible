@@ -98,3 +98,10 @@ compliance_checks:
     expect: absent
     remediation:
       - lines: ["no snmp-server community public", "no snmp-server community private"]
+  - id: CHECK-013
+    title: IP source routing must be disabled
+    severity: medium
+    pattern: '(?m)^no ip source-route$'
+    expect: present
+    remediation:
+      - lines: ["no ip source-route"]
